@@ -18,7 +18,7 @@ import os
 
 
 
-BUCKET_NAME = 'oggtestbuck' # replace with your bucket name
+BUCKET_NAME = 'ncar-archives-pre' # replace with your bucket name
 KEY = 'collectionKey.xml' # replace with your object key
 CHKSUMTMP = 'chksumtmp/'
 
@@ -90,14 +90,14 @@ print("Bucket List: %s" % buckets)
 bucket = s3r.Bucket(BUCKET_NAME)
 
 # Get subdirectory info
-prefix = 'Unprocessed digital  collections'
+prefix = 'Unprocessed digital collections'
 # prefix = 'Test1/'
 # prefix = ''
 
 
 
-for obj in bucket.objects.filter(Prefix=prefix):
-  print (obj.key)
+#for obj in bucket.objects.filter(Prefix=prefix):
+#  print (obj.key)
   
   
 print("Listing Subdirectories/n/n/n")
@@ -113,15 +113,16 @@ downloaddir = '/home/ec2-user/environment/chksumtmp/'
 
 
 
-def getfilesfroms3folder(bucket, prefix):
+def getfilesfroms3folder(bucket, prefix, downloaddir):
+    
+    filenames = []
 
     FilesNotFound = True
     i = 0
     for obj in bucket.objects.filter(Prefix=prefix):
-        print('{0}:{1}'.format(bucket.name, obj.key))
+#        print('{0}:{1}'.format(bucket.name, obj.key))
         if not obj.key.endswith(os.sep):
-            base_name = getfilefroms3(bucket.name, obj.key, downloaddir)
-            
+            filenames.append(obj.key)
             FilesNotFound = False
             i = i + 1
     
@@ -133,13 +134,18 @@ def getfilesfroms3folder(bucket, prefix):
          print("ALERT", "No file in {0}/{1}".format(bucket, prefix)) 
          
     print('Total objects in bucket {0}, prefix = {1} = {2}' .format(bucket, prefix, i))
+    return filenames
      
      
-base_name = getfilesfroms3folder(bucket, prefix)
+# file_names = getfilesfroms3folder(bucket, prefix, downloaddir)
+keys = getfilesfroms3folder(bucket, prefix, downloaddir)
 
-checksum(downloaddir + base_name)
+for key in keys:
+    base_name = getfilefroms3(bucket.name, key, downloaddir)
+
+    checksum(downloaddir + base_name)
          
-delete_local_file(downloaddir + base_name)
+    delete_local_file(downloaddir + base_name)
               
 bucketname = BUCKET_NAME
 filename = KEY
